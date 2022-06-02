@@ -1,0 +1,13 @@
+// Base styles
+
+* {
+    box-sizing: border-box;
+}
+
+html,
+body {
+    font-size: $fontSize;
+    font-family: $fontFamily;
+    color: $textDark;
+    line-height: $lineHeight;
+}
