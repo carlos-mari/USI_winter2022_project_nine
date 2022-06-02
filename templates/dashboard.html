@@ -1,0 +1,197 @@
+{% extends 'dashboard-page.html' %}
+
+{% block balanceAlgo %} {{ "%.4f"|format(session['algoBalance']|float) }} {% endblock balanceAlgo %}
+
+{% block balanceASA %}{{ "%.2f"|format(session['asaBalance']|float) }}{% endblock balanceASA %}
+
+{% block balanceAlgo2 %}{{ "%.4f"|format(session['algoBalance']|float) }}{% endblock balanceAlgo2 %}
+
+{% block balanceASA2 %}{{ "%.2f"|format(session['asaBalance']|float) }}{% endblock balanceASA2 %}
+
+{% block balanceAlgo3 %}{{ "%.4f"|format(session['algoBalance']|float) }}{% endblock balanceAlgo3 %}
+
+{% block balanceASA3 %}{{ "%.4f"|format(session['asaBalance']|float) }}{% endblock balanceASA3 %}
+
+{% block xchangeAlgoToAsa %}{{ session['exchangeAlgoToAsa'] }}{% endblock xchangeAlgoToAsa %}
+{% block xchangeAsaToAlgo %}{{ session['exchangeAsaToAlgo'] }}{% endblock xchangeAsaToAlgo %}
+
+{% block asaOptin %}
+    {% if (session['asaOptIn']==True) %}
+        &nbsp;
+    {% else %}    
+        <div class="alert alert-secondary text-left fs-5" role="alert">
+        <b>Your wallet has never been used with Marketcoin</b><br/>
+        <a href="#" data-bs-toggle="modal" data-bs-target="#asaModal">Add the asset to your wallet</a> to start trading.
+        </div>
+    {% endif %}  
+{%endblock asaOptin %}
+
+{%block disableTradeBtn%}
+    {% if (session['asaOptIn']==True) %}
+    <button type="button" class="btn-lg btn-primary" data-bs-toggle="modal" data-bs-target="#exchangeModal">Trade ALGO : MARKETCOIN</button>      
+    {% endif %}  
+{%endblock disableTradeBtn%} 
+
+{% block priceSilver %}{{ session['priceSilver'] }}{% endblock priceSilver %}
+{% block priceSilver2 %}{{ session['priceSilver'] }}{% endblock priceSilver2 %}
+{% block priceGold %}{{ session['priceGold'] }}{% endblock priceGold %}
+
+{% block asaSpend %}
+    {% if (session['clientLevel'] == 0) %}
+    <div class="card">   
+        <div class="card-header fs-3 bg-white">
+            <img class="mb-8" src="../static/img/clipboard-data.svg" alt="" width="64" height="64" style="padding:0.5em;"> Get some Analytics !
+        </div>         
+        <div class="card-body fs-4 bg-light">
+          Purchase our data services for only 1 MKTCOIN per session.
+          <button type="button" class="btn btn-info" data-bs-toggle="modal" data-bs-target="#spendModal">Buy Now!</button>
+        </div> 
+    </div>
+    {% else %}
+
+
+    <div class="card">   
+        <div class="card-header fs-4 bg-white">
+            <img class="mb-8" src="../static/img/clipboard-data.svg" alt="" width="64" height="64" style="padding:0.5em;"> Marketcoin Analytics: daily totals for:<p> {{session['walletAddress']}}
+        </div>         
+        <div class="card-body fs-4 bg-light">            
+            <div id="wrapper">
+                <div id="chart-line"></div>
+            </div>                         
+        </div> 
+    </div>
+
+	<script type="text/javascript">
+        // CM: the integration with Apexcharts is not very  clean: as Bootstrap 5 does not 
+        // play well with jQuery the options were "Promises" or using the  "superagent" - chose the latter
+        // as I have used it before - a more suitable version of Project Nine would have to use "JS Promises"
+		// and show more than one chart
+		var amountData = [];
+		var timeData = [];
+		var senderData = [];
+		var receiverData = [];
+		var txTypeData = [];
+
+		var data;
+		
+        var options = {
+          series: [],
+          chart: {
+          id: 'bar',
+          type: 'bar',
+          toolbar: {
+            autoSelected: 'pan',
+            show: false
+          }
+        },
+        colors: ['#546E7A'],
+        dataLabels: {
+          enabled: false
+        },
+        fill: {
+          opacity: 1,
+        },
+        markers: {
+          size: 0
+        },
+		yaxis: {
+		  labels: {
+			formatter: function (value) {
+			  return value + " Mktcoin";
+			}
+		  },
+		},		
+        xaxis: {
+          type: 'datetime'
+        }
+        };
+		
+		function iterateObject(obj) {
+			for(prop in obj) {
+				if(typeof(obj[prop]) == "object"){
+					iterateObject(obj[prop]);
+				} else {
+					if (prop == "amount") {
+						amountData.push(obj[prop].toString());
+					}
+					if (prop == "round-time") {
+						timeData.push(obj[prop].toString());
+					}
+					if (prop == "sender") {
+						senderData.push(obj[prop].toString());
+					}
+					if (prop == "receiver") {
+						receiverData.push(obj[prop].toString());
+					}
+					if (prop == "tx-type") {
+						txTypeData.push(obj[prop].toString());
+					}					
+				  }
+			}
+		}
+
+	  function generateData(dsOne,dsTwo) {
+		var i = 0;
+		var series = [];
+		while (i < dsOne.length) {		
+		  var x = Math.round(amountData[i] / 100)
+		  var y = new Date(timeData[i]*1000).toISOString().substring(0, 10);		  
+		  series.push([y, x]);
+		  i++;
+		}
+		return series;
+	  }		
+				
+		
+	  (function() {
+		// superagent is exposed as `window.superagent`
+		// if you wish to use "request" instead please
+		// uncomment the following line of code:
+		// `window.request = superagent;`
+		superagent
+		   .get('https://algoindexer.testnet.algoexplorerapi.io/v2/accounts/{{ session['walletAddress']}}/transactions?limit=500&asset-id=88504379')
+		   .then(res => {
+				
+				Object.entries(res).forEach(([key, value]) => {
+				if (key=='text'){
+					objText = JSON.parse(value);
+					loop = iterateObject(objText);				
+				}
+				});
+				
+				console.log('finished iterating JSON');
+				thisThing = generateData(amountData,timeData);
+				chart.updateSeries([{
+				  data: thisThing
+				  }])
+
+		   })
+		   .catch(err => {
+			console.log(err.message)
+			  // err.message, err.response
+		   });
+	  })();
+	  
+	  
+	var chart = new ApexCharts(document.querySelector("#chart-line"), options);
+	chart.render();
+		
+	</script>    
+    
+    {% endif %}  
+{%endblock asaSpend %}
+
+{% block showErrors %} 
+    {% with messages = get_flashed_messages() %}
+        {% if messages %}
+        <div class="alert alert-warning alert-dismissible fade show" role="alert">
+            <ul>
+        {% for message in messages %}
+        <li>{{ message }}</li>
+        {% endfor %}
+            </ul>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>    
+        </div>
+        {% endif %}        
+    {% endwith %}
+{% endblock showErrors %}

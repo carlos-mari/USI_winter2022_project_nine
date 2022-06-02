@@ -1,0 +1,12 @@
+{% extends 'index-page.html' %}
+
+{% block alertMsg %}
+    {% if (session['errorCode'] != 0 ) %}  
+
+    <div class="alert alert-warning alert-dismissible show" role="alert">
+        <b> Error: {{ session['errorCode'] }},  {{ session['errorMessage'] }}</b><br/>
+        <i> Context: {{ session['errorContext'] }}</i> 
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>    
+    {% endif %}  
+{%endblock alertMsg %}

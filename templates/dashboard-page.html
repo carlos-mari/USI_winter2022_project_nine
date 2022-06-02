@@ -1,0 +1,235 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="">
+    <title>Dashboard - Project Nine</title>
+
+    <script src="../static/js/apexcharts.min.js"></script>	
+    <script src="../static/js/superagent.min.js"></script>    
+
+    <!-- Bootstrap core CSS -->
+    <link rel="stylesheet" type="text/css" href="../static/css/bootstrap.min.css">
+    <link rel="stylesheet" type="text/css" href="../static/css/dashboard.css">
+    <link rel="stylesheet" type="text/css" href="../static/css/modals.css">          
+
+    <style>
+      .bd-placeholder-img {
+        font-size: 1.125rem;
+        text-anchor: middle;
+        -webkit-user-select: none;
+        -moz-user-select: none;
+        user-select: none;
+      }
+
+      @media (min-width: 768px) {
+        .bd-placeholder-img-lg {
+          font-size: 3.5rem;
+        }
+      }
+      #wrapper {
+        padding-top: 20px;
+        padding-left: 10px;
+        background: #fff;
+        border: 1px solid #ddd;
+        box-shadow: 0 22px 35px -16px rgba(0, 0, 0, 0.1);
+        margin: 35px auto;
+        max-width: 720px;
+      }
+      
+      #chart-line {
+        position: relative;
+        margin-top: -40px;
+      }      
+    </style>
+
+  </head>
+  <body>
+    
+<header class="navbar navbar-light sticky-top bg-light flex-md-nowrap p-0 shadow">
+  <img class="mb-8" src="../static/img/robot.svg" alt="" width="48" height="48" style="padding:0.5em;">
+  <div class="text-right">
+    <!-- <a class="btn-sm btn-warning" href="/debug" name="btmTest" id="btmTest" onclick="refresh();">Debug</a> &nbsp; -->
+    <a class="btn-lg btn-danger" href="/" name="btmLogout" id="btmLogout">Logout</a> &nbsp;
+  </div>
+</header>
+
+<main class="col-md-12 ms-sm-auto col-lg-12 px-md-4">
+
+  <div class="row">
+
+    <div class="card">
+        <div class="card-header bg-white fs-3 text-center">
+          Project Nine: Algorand to Marketcoin Exchange
+        </div>
+        <div class="card-body bg-light">
+          <div class="bd-example">
+            
+            {% block showErrors %}{% endblock showErrors %}
+
+            <div class="row text-center" style="margin-bottom:1em;">
+              <div class="col">
+                &nbsp;
+              </div>                  
+              <div class="col">
+                <span class="display-1 text-primary bolder" name="ajaxBalanceAlgo" id="ajaxBalanceAlgo">{% block balanceAlgo %}  {% endblock balanceAlgo %}</span><br/>
+                Testnet Algorand
+              </div>
+              <div class="col">
+                <span class="display-1 text-danger bolder" name="ajaxBalanceASA" id="ajaxBalanceASA">{% block balanceASA %}  {% endblock balanceASA %}</span><br/>
+                Marketcoin
+              </div>
+              <div class="col">
+                &nbsp;
+              </div>                    
+            </div>
+            <div class="row text-center" style="margin-bottom:1em;">
+              <div class="col">
+                <p style="padding-top:1em;"> {%block disableTradeBtn%} {%endblock disableTradeBtn%}</p>
+                <p class="card-text"> {% block asaOptin %} {% endblock asaOptin %} {% block displayWarning %} {% endblock displayWarning %} </p>                                  
+              </div>
+          </div>
+        </div>                  
+
+      </div>
+    </div>        
+  </div>  
+
+  <div class="row">
+    {% block asaSpend %} {% endblock asaSpend %}
+  </div> 
+  
+</main>
+
+<!-- End of core dashboard -->
+
+<!-- Exchange modal window -->
+<div class="modal fs-5" id="exchangeModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="exchangeModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-body">        
+        <div class="col">
+          <div class="border bg-light text-center">
+            <label class="form-label">
+              <strong>Assets</strong></label>                  
+            <div class="form-check">                 
+              <span style="padding:0.25em;">Algorand: {% block balanceAlgo2 %} {% endblock balanceAlgo2 %} &nbsp;&nbsp;&nbsp; Marketcoin: {% block balanceASA2 %} {% endblock balanceASA2 %}</span><br/>
+              <span class="text-muted small">Exchange rate 1 to 1 (fees of 0.001 Algo apply)</span>
+            </div> 
+          </div>
+        </div>
+        
+        <form name="frmTrade" id="frmTradeID" method="POST" action="/trade">         
+          <div class="col">
+            <div class="text-center" style="margin-top:0.75em;">
+                  <strong>Order for MKTCOIN</strong>                 
+                <div class="form-check">
+                  <span style="width:50%;float:left;">
+                  <label class="form-check-label" for="radioBuy">
+                  <input type="radio" name="orderType" class="form-check-input" id="radioBuy" value="buy" checked>
+                  Buy </label>
+                  </span>
+                  <span style="width:50%;float:right;">                
+                  <label class="form-check-label" for="radioSell">
+                  <input type="radio" name="orderType" class="form-check-input" id="radioSell" value="sell">
+                  Sell </label>
+                  </span>
+                </div>
+            </div>
+          </div>         
+
+          <div class="col">
+            <div class="text-center">                  
+                <div class="form-check">
+                  <div class="input-group" style="padding:1em;">
+                    <span class="input-group-text" id="basic-addon1"><strong>Volume</strong></span>
+                    <input type="text" maxlength="8" size="8" class="form-control fs-4 text-end" id="fVolumeID" name="fVolume" placeholder="0">
+                  </div>
+                  <div class="input-group small">
+                    <span class="input-group-text">25-word phrase</span>
+                    <textarea class="form-control" aria-label="With textarea" id="fPhraseID" name="fPhrase" COLS="*" ROWS="3"></textarea>
+                  </div>
+                  <input type="hidden" name="algoBalance" id="algoBalanceID" value="{% block balanceAlgo3 %} {% endblock balanceAlgo3 %}">
+                  <input type="hidden" name="asaBalance" id="asaBalanceID" value="{% block balanceASA3 %} {% endblock balanceASA3 %}">
+                </div>
+            </div>
+          </div>  
+        </div>
+        <div class="modal-footer">
+          
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+            <button type="button" class="btn btn-primary"  onClick="validateTradeForm();document.forms['frmTrade'].submit()">Place Order</button>
+          
+        </div>
+      </form>
+    </div>
+  
+  </div>
+</div>
+
+<!-- ASA optin modal window -->
+<div class="modal fade" id="asaModal" tabindex="-1" aria-labelledby="asaModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="asaModalLabel"> <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" class="bi bi-exclamation-triangle-fill danger" viewBox="0 0 16 16">
+          <path d="M8.982 1.566a1.13 1.13 0 0 0-1.96 0L.165 13.233c-.457.778.091 1.767.98 1.767h13.713c.889 0 1.438-.99.98-1.767L8.982 1.566zM8 5c.535 0 .954.462.9.995l-.35 3.507a.552.552 0 0 1-1.1 0L7.1 5.995A.905.905 0 0 1 8 5zm.002 6a1 1 0 1 1 0 2 1 1 0 0 1 0-2z"/>
+        </svg> MARKETCOIN (MKTCOIN) ASA: 88504379</h5>    
+      </div>
+      <form name="frmOptin" id="frmOptinID" method="POST" action="/optin"> 
+        <div class="modal-body">
+            <p>Before you can trade MARKETCOIN you must add the asset to your wallet - this is a safety mechanism of the Algorand network to 
+            prevent unwanted assets to be sent to users as "spam".</p>
+            <p>You must sign with your passphrase to "Opt-in" for MARKETCOIN. This transaction has a fee of 0.001 Algos.</p>
+            <p>If your wallet is brand new, <a href="https://dispenser.testnet.aws.algodev.network/" target="_new">you can load Testnet Algos from a faucet.</a></p>
+            <div class="input-group small">
+              <span class="input-group-text">25-word phrase</span>
+              <textarea class="form-control" aria-label="With textarea" id="optInPhraseID" name="optInPhrase" COLS="*" ROWS="3"></textarea>
+            </div>       
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+            <button type="button" class="btn btn-primary"  onClick="validateOptInForm();document.forms['frmOptin'].submit()">Approve Opt-in</button>
+          </div>
+        </div>
+      </form>  
+  </div>
+</div>
+
+  <!-- spend ASA modal window -->
+  <div class="modal fade" id="spendModal" tabindex="-1" aria-labelledby="spendModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="spendModalLabel"> <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" class="bi bi-exclamation-triangle-fill danger" viewBox="0 0 16 16">
+            <path d="M8.982 1.566a1.13 1.13 0 0 0-1.96 0L.165 13.233c-.457.778.091 1.767.98 1.767h13.713c.889 0 1.438-.99.98-1.767L8.982 1.566zM8 5c.535 0 .954.462.9.995l-.35 3.507a.552.552 0 0 1-1.1 0L7.1 5.995A.905.905 0 0 1 8 5zm.002 6a1 1 0 1 1 0 2 1 1 0 0 1 0-2z"/>
+          </svg> SPEND MARKETCOIN</h5>    
+        </div>
+        <form name="frmSpendASA" id="frmSpendASAID" method="POST" action="/spend"> 
+          <div class="modal-body">
+              <p>To authorise spending <strong>{% block priceSilver2 %}{{ session['priceSilver'] }}{% endblock priceSilver2 %} Marketcoin</storng>, enter your passphrase.</p>
+              <div class="input-group small">
+                <span class="input-group-text">25-word phrase</span>
+                <input name="spendASA" type="hidden" value="1">
+                <textarea class="form-control" aria-label="With textarea" id="spendPhrase" name="spendPhrase" COLS="*" ROWS="3"></textarea>
+              </div>       
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+              <button type="button" class="btn btn-primary"  onClick="validateSpendForm();document.forms['frmSpendASA'].submit()">Approve Spend</button>
+            </div>
+          </div>
+        </form>  
+    </div> 
+  </div>
+
+  <script src="../static/js/bootstrap.bundle.min.js"></script>
+  <script src="../static/js/dashboard.js"></script>
+  <script src="../static/js/ajax-dashboard.js"></script>  
+
+  </body>
+
+
+
+</html>
